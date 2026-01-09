@@ -7,12 +7,16 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     - [Git](https://github.com/git-for-windows/git/releases/download/v2.52.0.windows.1/Git-2.52.0-64-bit.exe) or watch this video [How to Install Git & Use Git in Visual Studio Code](https://youtu.be/3Tsaxxv9sls?t=43)
 2. Create a project folder > project_name
     - For example:\
-    > C:\Users\Dan\Attendance_System <br/>
+    > C:\Users\Dan\Attendance_System
+    
     or the directory of your project folder.
 3. Open Visual Studio Code and select
     > File <br/>
-    and <br/>
-    > Open Folder. <br/>
+
+    and
+
+    > Open Folder
+
     Then, select your created project folder.
 4. Open Terminal and copy and paste this using
     - PowerShell:
