@@ -8,7 +8,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
 2. Create a project folder > project_name
     - For example:\
     > C:\Users\Dan\Attendance_System
-    
+
     or the directory of your project folder.
 3. Open Visual Studio Code and select
     > File <br/>
@@ -22,6 +22,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     - PowerShell:
     ```powershell
     git clone https://github.com/danclangcoder/attendance-system.git
+    cd attendance-system
     python3.12 -m venv .venv
     .venv/Scripts/Activate.ps1
     pip install -r requirements.txt
