@@ -26,7 +26,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
 
     > Open Folder
 
-    Then, select your **attendance-system folder.
+    Then, select your attendance-system folder.
 
 5. Open Terminal and create a virtual environment and activate:
     ```powershell
@@ -38,7 +38,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     ![Virtual environment activated](terminal-screenshot.png)
 
 7. Next, select the correct Python interpreter (.venv) by using VS Code commands:
-    - Ctrl + Shift + P
+    - Ctrl + Shift + P. 
     Then, type interpreter and select
 
     > Python: Select Interpreter
