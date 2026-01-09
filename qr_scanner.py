@@ -23,7 +23,7 @@ while camera_open:
         str_txt = output.data.decode('utf-8')
 
         if str_txt in scanned_codes:
-            print('Already scanned')
+            print('Already scanned today')
             time.sleep(3)
         else:
             print(str_txt)
