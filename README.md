@@ -62,3 +62,18 @@ git add qr_scanner.py
 git commit -m "Added new function"
 git push origin master
 ```
+When creating new file or folder:
+```powershell
+git pull origin master
+git add .
+git commit -m "Enter short description"
+git push origin master
+```
+
+When moving files or folders do this:
+```powershell
+git pull origin master
+git add -A
+git commit -m "Enter short description"
+git push origin master
+```
