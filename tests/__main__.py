@@ -9,11 +9,11 @@ from pyzbar.pyzbar import decode
 
 
 def run_app():
-    cam = cv2.VideoCapture(0)
+    cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     # Width and Height of the app window
-    cam.set(3, 640)
-    cam.set(4, 480)
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     camera_open = True
 
@@ -33,15 +33,22 @@ def run_app():
 
             if str_txt in scanned_codes:
                 print('Already scanned today')
-                time.sleep(2)
+                time.sleep(5)
             else:
                 print(str_txt)
+                time.sleep(1)
                 scanned_codes.append(str_txt)
-                time.sleep(2)
+                
 
-        cv2.imshow('QR Scanner', frame)
+        window_name = 'QR Scanner'
+        cv2.imshow(window_name, cv2.flip(frame, 1))
+        key_press = cv2.waitKey(1)
+        esc_key = chr(27)
         
-        if cv2.waitKey(1) == ord('q'):
+        if key_press == ord(esc_key):
+            break
+
+        if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
             break
 
     cam.release()   
