@@ -13,11 +13,14 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
 
     or the directory of your project folder.
 
-3. Open **Windows Terminal** and copy and paste this using:
+3. To clone this project, open **Windows Terminal** and go to your project directory by copying this command:
     via **PowerShell** or **Command Prompt**:
     ```cmd
+    cd Python_Projects
     git clone https://github.com/danclangcoder/attendance-system.git
     ```
+    You will see something like this:
+    ![Cloning process](cloning-process-screenshot.png)
 
 4. Open **Visual Studio Code** and select:
     > File
