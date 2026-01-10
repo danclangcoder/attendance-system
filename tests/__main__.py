@@ -37,7 +37,7 @@ def run_app():
             else:
                 print(str_txt)
                 scanned_codes.append(str_txt)
-                time.sleep()
+                time.sleep(2)
 
         cv2.imshow('QR Scanner', frame)
         
