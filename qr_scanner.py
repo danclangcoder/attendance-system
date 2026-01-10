@@ -34,6 +34,9 @@ while camera_open:
     
     if cv2.waitKey(1) == ord("q"):
         break
+    
+    if cv2.getWindowProperty('QR Scanner', cv2.WND_PROP_VISIBLE) < 1:
+        break
 
 cam.release()   
-cv2.destroyAl1lWindows()
+cv2.destroyAllWindows()
