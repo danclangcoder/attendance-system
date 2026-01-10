@@ -20,7 +20,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     git clone https://github.com/danclangcoder/attendance-system.git
     ```
     You will see something like this:
-    ![Cloning process](cloning-process-screenshot.png)
+    ![Cloning process](screenshots/cloning-process-screenshot.png)
 
 4. Open **Visual Studio Code** and select:
     > File
