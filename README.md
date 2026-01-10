@@ -38,7 +38,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     ```
 
 6. Once activated, your terminal will look like this:
-    ![Virtual environment activated](terminal-screenshot.png)
+    ![Virtual environment activated](screenshots/terminal-screenshot.png)
 
 7. Next, select the correct Python interpreter (.venv) by using VS Code commands:
     **Ctrl + Shift + P**.</br>
@@ -48,7 +48,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
     > Python: Select Interpreter
 
     Then, click the Python 3.12.10 (.venv) interpreter.
-    ![Interpreter select](select-interpreter-screenshot.png)
+    ![Interpreter select](screenshots/select-interpreter-screenshot.png)
 
 8. Install the packages listed in requirements.txt file by copy and paste on your VS Code Terminal:
     ```powershell
