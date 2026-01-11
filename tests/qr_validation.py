@@ -9,10 +9,11 @@ def get_key(data):
 def validate_key(key, my_keys):
     correct_key = True
 
-    if key in my_keys:
-        return correct_key
+    if key not in my_keys:
+        print('Not found')
+        return False
     else:
-        print('Invalid QR!')
+        return correct_key
 
 if __name__ == '__main__':
     
@@ -24,11 +25,35 @@ if __name__ == '__main__':
             'course': 'BSIT'
         }
     }
+    
+    while(True):
+        key_input = input('Enter\n [1] - Enroll QR\n [2] - scan QR\n [q] - Quit\n')
 
-    # Hash QR using SHA256
-    qr_code = input('Enter code: ')
-    new_key = get_key(qr_code)
+        if key_input == '1':
+            qr_code = input('Scan QR\n')
+            new_key = get_key(qr_code)
+            my_keys[new_key] = {
+                'name': 'New Student',
+                'section': '',
+                'course': ''
+            }
 
-    for key, value in my_keys.items():
-        if validate_key(new_key, key) == True:
-            print(f'{value['name']} PRESENT')
+            
+                
+        # Hash QR using SHA256
+        if key_input == '2':
+            qr_code = input('Scan QR\n')
+            new_key = get_key(qr_code)
+
+            for items in my_keys.values():
+                print(items)
+            
+            print('\n')
+
+            # for key, value in my_keys.items():
+            if validate_key(new_key, my_keys) == True:
+                info = my_keys[new_key]
+                print(f'{info['name']} PRESENT')
+
+        if key_input == 'q':
+            break
