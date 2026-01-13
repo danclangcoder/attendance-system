@@ -52,7 +52,7 @@ camera_open = True
 # Prevent duplicate scan habang bukas ang app
 scanned_codes = []
 
-print("📷 QR Scanner Started (Press Q to quit)")
+print("QR Scanner Started (Press Q to quit)")
 
 #
 def parse_qr_data(qr_text):
@@ -91,7 +91,7 @@ while camera_open:
     success, frame = cam.read()
 
     if not success:
-        print("❌ Camera device not selected.")
+        print("Camera device not selected.")
         break
 
     # ...existing code...
@@ -100,14 +100,14 @@ for output in decode(frame):
     str_txt = output.data.decode("utf-8")
 
     if str_txt in scanned_codes:
-        print("⚠ Already scanned")
+        print("Already scanned")
         time.sleep(2)
     else:
         student_id, name, course, section = parse_qr_data(str_txt)
 
         log_attendance(student_id, name, course, section)
 
-        print(f"✅ Logged: {name}")
+        print(f"Logged: {name}")
         scanned_codes.append(str_txt)
         time.sleep(2)
 
@@ -127,4 +127,4 @@ for output in decode(frame):
 # ==============================
 cam.release()
 cv2.destroyAllWindows()
-print("👋 Scanner Closed")
+print("Scanner Closed")
