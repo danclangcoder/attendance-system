@@ -1,5 +1,8 @@
-# Python
+# Python Virtual Environment
 .venv/
 
-# VS Code
+# VS Code 
 .vscode/
+
+# API Keys, Creds or Passwords
+**/credentials.json
