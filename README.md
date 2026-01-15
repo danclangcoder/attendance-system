@@ -1,6 +1,37 @@
 # Attendance System
 A QR-based attendance system that tracks student logs sent to Google Sheets using Python libraries and QR scanner device.
 
+## Features
+- QR-based Attendance Logging
+- Google Sheets Automation
+- Plug-and-Play
+- SHA256 Signing
+
+## Back End
+- Python version 3.12
+- PySerial Python Library for Hardware Inferfacing
+- Google Sheets API and Google Drive API
+- SHA256 Hashing Algorithm
+
+## Front End
+- Tkinter Built-in Python GUI Library
+
+## How It Works
+**QR Registration**
+1. Scan ID
+2. Generate unique signed key via SHA256
+3. Store key with student number
+
+**Attendance Logging**
+1. Scan ID
+2. App will search from Google Sheets
+3. App verifies student
+4. Display feedback on Graphical User Interface (GUI)
+
+    > name, student number, timestamp, status(present/late)
+
+5. Instructors/teachers can check their Google Sheets spreadsheet file and verify student logs. Then, mark students ABSENT that did not scan.
+
 ## Setup
 1. Download and install **Python** and **Git**:
     - [Python 3.12.10](https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe)
