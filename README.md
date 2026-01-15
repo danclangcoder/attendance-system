@@ -15,6 +15,7 @@ A QR-based attendance system that tracks student logs sent to Google Sheets usin
 
 ## Front End
 - Tkinter Built-in Python GUI Library
+- Figma for Tooling and Designing UI/UX
 
 ## How It Works
 **QR Registration**
