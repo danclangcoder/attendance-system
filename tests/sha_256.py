@@ -15,20 +15,20 @@ if __name__ == '__main__':
     students = {
         "A123F0024": "bc0cd7c2cebfdde4147fe5c3a517a3c46fdcdd239f2436927f290d317a450d10"
     }
-    
-    in_menu = True
 
-    while in_menu:
-        char = input('Enter to REGISTER and q or Q to QUIT: ')
-        if char == 'q' or 'Q':
+    while True:
+        char = input('Enter to REGISTER and q to QUIT: ')
+        if char == 'q':
             break
 
-        student_number = input('Enter Student No: ')
+        student_number = input('Enter Student No: ').upper()
         new_hash = hash_key(student_number)
 
         if new_hash not in students.values():
-            print(f'NEW {new_hash}')
             students[student_number] = new_hash
+
+            for student_num, hash_val in students.items():
+                print(f'\t{student_num}: {hash_val}')
         
         else:
-            print(f'FOUND {new_hash}')
+            print(f'Already registered {new_hash}')
