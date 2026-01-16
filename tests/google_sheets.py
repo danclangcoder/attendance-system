@@ -15,6 +15,15 @@ def search_by_id(id, wb):
                 return student['Complete Name']
             
 def log_attendance(id, wb):
+    # Pass search function to reference student
+    # Log status and timestamp
+
+    # if current_time > subject_time + grace_period:
+    #   return LATE
+    # elif current_time > cut_off_time:
+    #   return ABSENT
+    # else:
+    #   return PRESENT
     ...
 
 if __name__ == '__main__':
