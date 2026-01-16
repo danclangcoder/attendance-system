@@ -1,8 +1,4 @@
-# Python Virtual Environment
-.venv/
-
-# VS Code 
+.venv/ 
 .vscode/
-
-# API Keys, Creds or Passwords
 **/credentials.json
+**/__pycache__/

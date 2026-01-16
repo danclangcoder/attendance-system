@@ -10,20 +10,16 @@ def search_by_id(id, wb):
     for section in workbook.worksheets():
         records = section.get_all_records()
 
-        for row, student in enumerate(records):
-            if student.get('Student Number') == id:
-                return student['Complete Name']
-            
-def log_attendance(id, wb):
-    # Pass search function to reference student
-    # Log status and timestamp
+        for row, student in enumerate(records, start= 1):
+            if id == student['Student Number']:
+                return f'{student['Complete Name']} {student['Status']}'
+                
+def verify_by_sha(sha_key, filename):
+    if sha_key in filename.values():
+        return filename
+    return
 
-    # if current_time > subject_time + grace_period:
-    #   return LATE
-    # elif current_time > cut_off_time:
-    #   return ABSENT
-    # else:
-    #   return PRESENT
+def log_attendance(id, wb):
     ...
 
 if __name__ == '__main__':
@@ -31,5 +27,6 @@ if __name__ == '__main__':
     sheet_url = 'https://docs.google.com/spreadsheets/d/16y8xpRNcwNdvnQTWgYn48q7QIhvUdwegv1az1JTAA3k/edit?usp=sharing'
     workbook = CLIENT.open_by_url(sheet_url)
 
-    student_id = 'A123F0024'
-    my_id = search_by_id(student_id, workbook)
+    student_id = 'A123F0029'
+    result = search_by_id(student_id, workbook)
+    print(result)
