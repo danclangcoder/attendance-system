@@ -1,31 +1,26 @@
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime
+from google.oauth2.service_account import Credentials
 
 # GOOGLE SHEETS SETUP
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+CREDS = Credentials.from_service_account_file('tests/credentials.json', scopes=SCOPES)
+CLIENT = gspread.authorize(CREDS)
 
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "tests/credentials.json", scope
-)
+def search_by_id(id, wb):
+    for section in workbook.worksheets():
+        records = section.get_all_records()
 
-client = gspread.authorize(creds)
-sheet = client.open("AttendanceLogs").sheet1
+        for row, student in enumerate(records):
+            if student.get('Student Number') == id:
+                return student['Complete Name']
+            
+def log_attendance(id, wb):
+    ...
 
+if __name__ == '__main__':
+    # Linking Google Sheets
+    sheet_url = 'https://docs.google.com/spreadsheets/d/16y8xpRNcwNdvnQTWgYn48q7QIhvUdwegv1az1JTAA3k/edit?usp=sharing'
+    workbook = CLIENT.open_by_url(sheet_url)
 
-def log_attendance(student_id, name, course, section):
-    now = datetime.now()
-    time_in = now.strftime("%H:%M:%S")
-    date_today = now.strftime("%Y-%m-%d")
-
-    sheet.append_row([
-        student_id,
-        name,
-        course,
-        section,
-        time_in,
-        date_today
-    ])
+    student_id = 'A123F0024'
+    my_id = search_by_id(student_id, workbook)
