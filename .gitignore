@@ -1,4 +1,5 @@
-.venv/ 
+.venv/
 .vscode/
 **/credentials.json
-**/__pycache__/
+**/registered_qr.json
+**__pycache__/

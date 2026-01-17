@@ -1,5 +1,7 @@
 import hashlib
-
+'''
+Generate 256-bit hash values
+'''
 def hash_key(data: str):
     if data == str(''):
         print('Does not contain a valid string')
