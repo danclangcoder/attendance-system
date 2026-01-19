@@ -2,7 +2,7 @@ import hashlib
 '''
 Generate 256-bit hash values
 '''
-def hash_key(data: str):
+def create_key(data: str):
     if data == str(''):
         print('Does not contain a valid string')
     
@@ -24,7 +24,7 @@ if __name__ == '__main__':
             break
 
         student_number = input('Enter Student No: ').upper()
-        new_hash = hash_key(student_number)
+        new_hash = create_key(student_number)
 
         if new_hash not in students.values():
             students[student_number] = new_hash
