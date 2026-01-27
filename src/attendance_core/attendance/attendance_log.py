@@ -11,7 +11,7 @@ def register(device, users_file, sha):
     with open(users_file, 'w') as file:
         json.dump(users, file, indent=4)
 
-def log_attendance(device, users_file, logs_file, sha):
+def record(device, users_file, logs_file, sha):
     logs = {}
     today = datetime.now().strftime('%m/%d/%Y')
     now = datetime.now().strftime('%I:%M %p')
