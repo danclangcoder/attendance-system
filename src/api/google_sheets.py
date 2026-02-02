@@ -34,18 +34,3 @@ class Workbook:
                     return f'{student['Complete Name']}'
                 
         return None
-    
-# Init
-API = GoogleSheetAPI(scopes=['https://www.googleapis.com/auth/spreadsheets'])
-LAGBSITM91_SCHED = Workbook(
-    sheets_url='https://docs.google.com/spreadsheets/d/1D_IFbbUspSL0zQtn7f_1vcXhialxqDg6y9Yk5gLNNmw/edit?usp=sharing',
-    api=API
-)
-BSITCP2 = Workbook(
-    sheets_url='https://docs.google.com/spreadsheets/d/16y8xpRNcwNdvnQTWgYn48q7QIhvUdwegv1az1JTAA3k/edit?usp=sharing',
-    api=API
-)
-COMPSYS = Workbook(
-    sheets_url='https://docs.google.com/spreadsheets/d/1cg-Ss9hatEfhhoADiXAQMH1s1N_DA2rHU9SMaLEGx6M/edit?usp=sharing',
-    api=API
-)

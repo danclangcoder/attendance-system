@@ -11,8 +11,6 @@ def scan_qr():
 
     camera_open = True
 
-    # Empty list for storing QR to prevent continouos process and crashing
-
     while camera_open:
         success, frame = cam.read()
 
