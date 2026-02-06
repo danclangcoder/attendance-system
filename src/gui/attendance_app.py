@@ -1,38 +1,66 @@
 import tkinter as tk
+from tkinter import ttk
+# from devices.qr_camera import scan_qr
 
 class AttendanceApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Attendance System")
-        self.center_main_window(1280, 720)
+        self.state("zoomed")
         self.minsize(640, 480)
-        self.create_widgets()
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+        
+        # Group widgets into a Frame widget
+        start_menu = ttk.Frame(self)        
+        self.init_widgets(start_menu)
 
-    def center_main_window(self, width, height):
+    def init_widgets(self, frame):
+        # Scan
+        scan_button = ttk.Button(
+            frame, 
+            text="Scan ID (QR)",
+            takefocus=False,
+            command=lambda: TopWindow(self, "ID – QR Scanner", 640, 480)
+        )
+        scan_button.pack(side="left", ipadx=50, padx=(20, 10))
+
+        #Register
+        register_button = ttk.Button(
+            frame, text="Register Students",
+            takefocus=False,
+            command=lambda: TopWindow(self, "Register your ID QR", 1280, 720)
+        )
+        register_button.pack(side="left", ipadx=50, padx=(10, 20))
+
+class TopBar(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+class 
+
+class TopWindow(tk.Toplevel):
+    def __init__(self, parent, title, width, height):
+        super().__init__(parent)
+        self.wm_title(title)
+        # self.state("zoomed")
+        self.center_toplevel(width, height)
+        self.minsize(width, height)
+
+        # Modal window
+        self.transient(parent)
+        self.grab_set()
+        self.focus_set()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def center_toplevel(self, width, height):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
-        self.geometry(f'{width}x{height}+{x}+{y}')
+        self.wm_geometry(f'{width}x{height}+{x}+{(y) - (round(y * 0.20))}')
 
-    def create_widgets(self):
-        self.label = tk.Label(self, text="Welcome to the Attendance System")
-        self.label.pack(pady=20)
-        self.scan_button = tk.Button(self, text="Record Attendance")
-        self.scan_button.pack(pady=10)
-        self.register_button = tk.Button(self, text="Register Students", command= self.register_window)
-        self.register_button.pack(pady=10)
-
-    def register_window(self):
-        register_window = tk.Toplevel(self)
-        register_window.title("Register Students")
-        self.center_toplevel(register_window, 640, 480)
-        label = tk.Label(register_window, text="Register Student")
-        label.pack(pady=20)
-
-    def center_toplevel(self, toplevel, width, height):
-        screen_width = toplevel.winfo_screenwidth()
-        screen_height = toplevel.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
-        y = (screen_height // 2) - (height // 2)
-        toplevel.geometry(f'{width}x{height}+{x}+{(y) - 100}')
+    def on_close(self):
+        self.grab_release()
+        self.destroy()
