@@ -14,4 +14,5 @@ def create_key(qr: str) -> str | ValueError:
         return new_key
 
 if __name__ == '__main__':
-    ...
+    password = input("Enter pass: ")
+    create_key(password)

@@ -17,7 +17,7 @@ def init_db(db_path='src/db/attendance.db'):
 def register_user(student_number, sha256_hash, db_path='src/db/attendance.db'):
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
-    cursor.execute("INSERT OR IGNORE INTO registered_users (student_number, sha256_hash) VALUES (?, ?)",
+    cursor.execute("INSERT INTO registered_users (student_number, sha256_hash) VALUES (?, ?)",
                    (student_number, sha256_hash))
     conn.commit()
     conn.close()
@@ -37,8 +37,15 @@ def remove_registered_user(student_number, db_path='src/db/attendance.db'):
     conn.commit()
     conn.close()
 
-if __name__ == '__main__':
-    student_number = 'A123F0025'
-    # hash = sha_256.create_key(student_number)
-    register_user(student_number, hash)
-    remove_registered_user(student_number)
+if __name__ == "__main__":
+    conn = sql.connect("src/db/attendance.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS user (
+            username TEXT PRIMARY KEY UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )"""
+    )
+    cursor.execute(
+        """INSERT INTO user (username, password) VALUES (?, ?)"""
+    )
