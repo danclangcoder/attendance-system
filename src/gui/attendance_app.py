@@ -52,14 +52,14 @@ class AttendanceApp(ctk.CTk):
         # ---------Sidebar----------
         self.sidebar = Sidebar(self)
 
-        # ------------------------------Main Content---------------------------
+        # ---------Main Content-----
+        self.main_frame = Main(self)
         
     def maximize_on_start(self):
         self.update_idletasks()
         self.state("zoomed")
 
-    def open_scanner(self):
-        device = self.device_options.get()
+    def open_scanner(self, device):
 
         if device == "Webcam":
             scanner = WebcamScanner()
@@ -67,6 +67,7 @@ class AttendanceApp(ctk.CTk):
             scanner = USBQRScanner(port="COM3")
 
         ScanWindow(self, scanner, callback=self.on_scan_complete)
+
 
     def on_scan_complete(self, qr):
         messagebox.showinfo("Scan Successful", qr)
@@ -100,7 +101,6 @@ class Sidebar(ctk.CTkFrame):
         super().__init__(parent)
 
         self.configure(
-            self, 
             width=300, 
             corner_radius=0, 
             border_color="#444444", 
@@ -133,10 +133,7 @@ class Main(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        
-        self.configure(
-            master=parent
-        )
+        self.parent = parent
         self.pack(expand=True, fill="both")
 
         self.device_options = ctk.CTkOptionMenu(
@@ -149,9 +146,13 @@ class Main(ctk.CTkFrame):
         scan_btn = ctk.CTkButton(
             master=self,
             text="Scan ID",
-            command=self.open_scanner
+            command=self.start_scan
         )
         scan_btn.place(relx=0.5, rely=1.0, anchor="s", y=-100)
+
+    def start_scan(self):
+        device = self.device_options.get()
+        self.parent.open_scanner(device)
 
 class ScanWindow(ctk.CTkToplevel):
     def __init__(self, parent, scanner, callback):
