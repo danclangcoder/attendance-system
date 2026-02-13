@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from typing import Tuple
 
 # =====================================================
 # CONFIG
@@ -34,6 +35,11 @@ class AttendanceApp(ctk.CTk):
         self.info_time = ctk.StringVar(value="---")
         self.info_status = ctk.StringVar(value="---")
 
+        # Animation state
+        self._panel_animating = False
+        self._left_panel_target_width = 260
+        self._pulse_active = False
+
         self.build_ui()
         self.home_screen()
 
@@ -50,9 +56,11 @@ class AttendanceApp(ctk.CTk):
                                        command=self.toggle_left_panel)
         self.menu_icon.pack(side="left", padx=10, pady=25)
 
-        ctk.CTkLabel(header, text="MENU",
-                     font=("Segoe UI", 24, "bold"),
-                     text_color=WHITE_TEXT).pack(pady=25)
+        # Header title - start slightly dim and fade in
+        self.header_title = ctk.CTkLabel(header, text="MENU",
+                         font=("Segoe UI", 24, "bold"),
+                         text_color="#9C9C9C")
+        self.header_title.pack(pady=25)
 
         main = ctk.CTkFrame(self, fg_color=BG_COLOR)
         main.pack(fill="both", expand=True, padx=20, pady=15)
@@ -84,26 +92,96 @@ class AttendanceApp(ctk.CTk):
         self.left_panel_visible = True
         self.toggle_left_panel()
 
+        # start subtle header animation
+        self.after(120, self.animate_header)
+
     def toggle_left_panel(self):
+        if self._panel_animating:
+            return
+        self._panel_animating = True
+
+        def animate(current, step, finish_cond, on_finish=None):
+            if finish_cond(current):
+                if on_finish:
+                    on_finish()
+                self._panel_animating = False
+                return
+            current = current + step
+            self.left_panel.configure(width=max(0, min(self._left_panel_target_width, current)))
+            self.after(12, lambda: animate(current, step, finish_cond, on_finish))
+
         if self.left_panel_visible:
-            for i in range(260, -1, -20):
-                self.left_panel.configure(width=i)
-                self.left_panel.update()
-            for button in self.buttons:
-                button.pack_forget()
-            self.left_panel.pack_forget()
+            # close panel
+            def finish_close():
+                for button in self.buttons:
+                    button.pack_forget()
+                self.left_panel.pack_forget()
+                self.menu_icon.configure(text="≡")
+
+            animate(self._left_panel_target_width, -8, lambda w: w <= 0, finish_close)
         else:
+            # open panel
             self.left_panel.pack(side="left", fill="y", padx=(0, 15))
-            for i in range(0, 261, 20):
-                self.left_panel.configure(width=i)
-                self.left_panel.update()
             for button in self.buttons:
                 button.pack(fill="x", padx=20, pady=12)
+
+            def finish_open():
+                self.menu_icon.configure(text="✕")
+
+            animate(0, 8, lambda w: w >= self._left_panel_target_width, finish_open)
+
         self.left_panel_visible = not self.left_panel_visible
 
     def make_btn(self, text, cmd, color=CARD_COLOR):
         button = ctk.CTkButton(self.left_panel, text=text, fg_color=color, command=cmd)
         return button
+
+    # ======================
+    # Animation helpers
+    # ======================
+    def _hex_to_rgb(self, h: str) -> Tuple[int, int, int]:
+        h = h.lstrip('#')
+        return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+    def _rgb_to_hex(self, rgb: Tuple[int, int, int]) -> str:
+        return '#%02x%02x%02x' % rgb
+
+    def _interpolate(self, a: str, b: str, t: float) -> str:
+        ra = self._hex_to_rgb(a)
+        rb = self._hex_to_rgb(b)
+        r = tuple(int(ra[i] + (rb[i] - ra[i]) * t) for i in range(3))
+        return self._rgb_to_hex(r)
+
+    def animate_header(self, steps: int = 12, delay: int = 40):
+        # Fade header title from dim to WHITE_TEXT
+        start = "#9C9C9C"
+        end = WHITE_TEXT
+        for i in range(steps):
+            t = i / (steps - 1)
+            color = self._interpolate(start, end, t)
+            self.after(i * delay, lambda c=color: self.header_title.configure(text_color=c))
+
+    def flash_success(self):
+        # Flash animation demo with fade back to CARD_COLOR
+        steps = 8
+        start = SUCCESS_COLOR
+        end = CARD_COLOR
+        for i in range(steps):
+            t = i / (steps - 1)
+            color = self._interpolate(start, end, t)
+            self.after(i * 50, lambda c=color: self.status_box.configure(fg_color=c))
+
+    def pulse_button(self, button: ctk.CTkButton, base_color: str = CARD_COLOR, pulse_color: str = "#4A4A4A"):
+        # Simple pulsing by toggling fg_color between base and pulse_color
+        if not getattr(self, '_pulse_active', False):
+            return
+        current = getattr(button, '_pulse_state', 0)
+        next_state = 1 - current
+        t = 0.5 if next_state else 0.0
+        color = self._interpolate(base_color, pulse_color, t)
+        button.configure(fg_color=color)
+        button._pulse_state = next_state
+        self.after(600, lambda: self.pulse_button(button, base_color, pulse_color))
 
     # =====================================================
     # GUI SCREENS (no backend)
@@ -127,15 +205,20 @@ class AttendanceApp(ctk.CTk):
 
         ctk.CTkLabel(self.right_panel, text="ATTENDANCE SCANNING",
                      font=("Segoe UI", 16, "bold"),
+                     highlightthickness=0,
                      text_color=WHITE_TEXT).pack(pady=15)
 
         self.info_row("STUDENT ID :", self.info_name)
         self.info_row("TIME :", self.info_time)
         self.info_row("STATUS :", self.info_status)
 
-        # Dummy scan button to show flash animation
-        ctk.CTkButton(self.right_panel, text="SCAN QR",
-                      command=self.flash_success).pack(pady=20)
+        # Dummy scan button to show flash animation and pulsing
+        self.scan_btn = ctk.CTkButton(self.right_panel, text="SCAN QR",
+                          command=self.flash_success)
+        self.scan_btn.pack(pady=20)
+        # start pulsing
+        self._pulse_active = True
+        self.pulse_button(self.scan_btn)
 
     def home_screen(self):
         self.clear_right_panel()
@@ -152,6 +235,8 @@ class AttendanceApp(ctk.CTk):
     # HELPERS
     # =====================================================
     def clear_right_panel(self):
+        # stop any pulsing animation when leaving a screen
+        self._pulse_active = False
         for w in self.right_panel.winfo_children():
             w.destroy()
 
@@ -161,10 +246,7 @@ class AttendanceApp(ctk.CTk):
         ctk.CTkLabel(row, text=label, width=15).pack(side="left")
         ctk.CTkLabel(row, textvariable=var).pack(side="left")
 
-    def flash_success(self):
-        # Flash animation demo
-        self.status_box.configure(fg_color=SUCCESS_COLOR)
-        self.after(400, lambda: self.status_box.configure(fg_color=CARD_COLOR))
+    # Animated flash_success defined earlier in the animation helpers
 
     def stop_loading(self):
         self.status_text.set("IDLE")
