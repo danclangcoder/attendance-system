@@ -146,7 +146,7 @@ class AttendanceApp(ctk.CTk):
         ctk.CTkLabel(stat_frame, text="TOTAL REGISTERED STUDENTS", font=("Segoe UI Bold", 13), text_color=ACCENT_COLOR).pack(pady=(35,0))
         ctk.CTkLabel(stat_frame, text=str(len(self.students)), font=("Segoe UI", 56, "bold")).pack()
 
-        ctk.CTkLabel(self.right_panel, text="Recently Enrolled", font=("Segoe UI Semibold", 16)).pack(anchor="w", pady=(20, 10))
+        ctk.CTkLabel(self.right_panel, text="Recently Registered Students", font=("Segoe UI Semibold", 16)).pack(anchor="w", pady=(20, 10))
         
         scroll = ctk.CTkScrollableFrame(self.right_panel, fg_color="transparent", corner_radius=15)
         scroll.pack(fill="both", expand=True)
