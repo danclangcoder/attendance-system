@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 from assets.img import STUDENT_ID
 import cv2
 
+
 class ScanWindow(ctk.CTkToplevel):
     def __init__(self, parent, scanner, callback):
         super().__init__(parent)
@@ -40,7 +41,7 @@ class ScanWindow(ctk.CTkToplevel):
                 corner_radius=15,
                 fg_color="transparent",
                 border_width=3,
-                border_color="#00C853"
+                border_color="#00C853",
             )
             scan_frame.grid(row=0, column=1, pady=10)
             scan_frame.grid_propagate(False)
@@ -48,7 +49,9 @@ class ScanWindow(ctk.CTkToplevel):
             id_img = Image.open(STUDENT_ID)
             img = ctk.CTkImage(id_img, size=(360, 480))
 
-            ctk.CTkLabel(scan_frame, image=img, text="").place(relx=0.5, rely=0.5, anchor="center")
+            ctk.CTkLabel(scan_frame, image=img, text="").place(
+                relx=0.5, rely=0.5, anchor="center"
+            )
             self.video_label = None
 
         try:
@@ -112,4 +115,4 @@ class ScanWindow(ctk.CTkToplevel):
         sh = self.winfo_screenheight()
         x = (sw // 2) - (w // 2)
         y = (sh // 2) - (h // 2)
-        self.geometry(f"{w}x{h}+{x-100}+{y-100}")
+        self.geometry(f"{w}x{h}+{x - 100}+{y - 100}")

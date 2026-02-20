@@ -1,16 +1,19 @@
-import cv2, hashlib
+import cv2
+import hashlib
 from serial import Serial
 from serial.tools import list_ports
 from pyzbar.pyzbar import decode
 
+
 def create_key(qr: str) -> str | ValueError:
-    if qr == str(''):
-        return ValueError('Does not contain a valid string.')
+    if qr == str(""):
+        return ValueError("Does not contain a valid string.")
     else:
-        new_hash = hashlib.new('sha256')
+        new_hash = hashlib.new("sha256")
         new_hash.update(qr.encode())
         new_key = new_hash.hexdigest()
         return new_key
+
 
 class WebcamScanner:
     def __init__(self, cam_index=0):
@@ -45,10 +48,7 @@ class WebcamScanner:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
         gray = cv2.adaptiveThreshold(
-            gray, 255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            11, 2
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
         )
         decoded_objects = decode(gray)
         for obj in decoded_objects:
@@ -61,6 +61,7 @@ class WebcamScanner:
         if self.cap:
             self.cap.release()
             self.cap = None
+
 
 class USBQRScanner:
     def __init__(self, port="COM3", baudrate=9600):
@@ -81,10 +82,9 @@ class USBQRScanner:
 
     def read(self):
         if self.usb and self.usb.in_waiting:
-            qr_code = self.usb.readline().decode(
-                encoding="utf-8",
-                errors="ignore"
-            ).strip()
+            qr_code = (
+                self.usb.readline().decode(encoding="utf-8", errors="ignore").strip()
+            )
 
             if qr_code:
                 return create_key(qr_code)

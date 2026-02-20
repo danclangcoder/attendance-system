@@ -6,9 +6,12 @@ from PIL import Image
 from assets.img import QR_LOGO
 from db.database import register_user
 
+
 class HomeView(ctk.CTkFrame):
     def __init__(self, parent, devices):
-        super().__init__(parent, corner_radius=0, border_width=1, border_color="#A9A9A9")
+        super().__init__(
+            parent, corner_radius=0, border_width=1, border_color="#A9A9A9"
+        )
         self.parent = parent
         self.pack(expand=True, fill="both")
 
@@ -31,16 +34,13 @@ class HomeView(ctk.CTkFrame):
 
         columns = ("Student Number", "Timestamp")
         self.tree = ttk.Treeview(
-            self.table_frame,
-            columns=columns,
-            show="headings",
-            height=20
+            self.table_frame, columns=columns, show="headings", height=20
         )
         for col in columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, anchor="center", width=400)
         self.tree.pack(expand=True, fill="both")
-        
+
         self.button_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.button_frame.place(relx=0.5, rely=0.5, anchor="center", y=20)
 
@@ -48,7 +48,7 @@ class HomeView(ctk.CTkFrame):
             self.button_frame,
             text="Open Excel",
             font=self.parent.custom_font,
-            command=self.open_excel_file
+            command=self.open_excel_file,
         )
         self.open_btn.grid(row=0, column=0, padx=10)
 
@@ -56,13 +56,12 @@ class HomeView(ctk.CTkFrame):
             self.button_frame,
             text="Scan ID",
             font=parent.custom_font,
-            command=self.start_scan
+            command=self.start_scan,
         )
         self.scan_btn.grid(row=0, column=1, padx=10)
 
         self.device_options = ctk.CTkOptionMenu(
-            self.button_frame,
-            values=self.display_devices
+            self.button_frame, values=self.display_devices
         )
         self.device_options.grid(row=0, column=2, padx=10)
         for name, available in devices.items():
@@ -75,7 +74,7 @@ class HomeView(ctk.CTkFrame):
     def open_excel_file(self):
         file_path = filedialog.askopenfilename(
             title="Select an Excel file",
-            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*"))
+            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*")),
         )
         if file_path:
             self.parent.excel.load_file(Path(file_path))
@@ -101,7 +100,10 @@ class HomeView(ctk.CTkFrame):
         if not actual_device:
             messagebox.showerror("Device Error", "Selected device is not connected.")
             return
-        self.parent.open_scanner(actual_device, callback=self.parent.verify_registered_qr)
+        self.parent.open_scanner(
+            actual_device, callback=self.parent.verify_registered_qr
+        )
+
 
 class RegisterView(ctk.CTkFrame):
     def __init__(self, parent):
@@ -109,7 +111,9 @@ class RegisterView(ctk.CTkFrame):
         self.parent = parent
         self.pack(expand=True, fill="both")
 
-        ctk.CTkLabel(self, text="Enter Student Number:", font=parent.custom_font).pack(pady=(50, 10))
+        ctk.CTkLabel(self, text="Enter Student Number:", font=parent.custom_font).pack(
+            pady=(50, 10)
+        )
         self.id_entry = ctk.CTkEntry(master=self, font=parent.custom_font)
         self.id_entry.pack(pady=(0, 10))
 
@@ -118,7 +122,7 @@ class RegisterView(ctk.CTkFrame):
             text="Scan QR",
             font=parent.custom_font,
             state="disabled",
-            command=self.start_qr_scan
+            command=self.start_qr_scan,
         )
         self.submit_btn.pack(pady=(0, 20))
 
@@ -156,27 +160,28 @@ class RegisterView(ctk.CTkFrame):
         self.id_entry.delete(0, "end")
         self.submit_btn.configure(state="disabled")
 
+
 class Sidebar(ctk.CTkFrame):
     def __init__(self, parent):
-        super().__init__(parent, width=300, corner_radius=0, border_width=1, border_color="#A9A9A9")
+        super().__init__(
+            parent, width=300, corner_radius=0, border_width=1, border_color="#A9A9A9"
+        )
         self.pack(side="left", fill="y", ipady=10)
-        
+
         qr_logo = ctk.CTkImage(Image.open(QR_LOGO), size=(100, 100))
         ctk.CTkLabel(self, text="", image=qr_logo).pack(pady=(50, 10))
 
         ctk.CTkButton(
-            self,
-            text="Home",
-            font=parent.custom_font,
-            command=parent.show_home_view
+            self, text="Home", font=parent.custom_font, command=parent.show_home_view
         ).pack(padx=10, pady=(20, 5))
 
         ctk.CTkButton(
             self,
             text="Register ID",
             font=parent.custom_font,
-            command=parent.show_register_view
+            command=parent.show_register_view,
         ).pack(padx=10, pady=(5, 5))
+
 
 class Menubar(tk.Menu):
     def __init__(self, parent_app):
@@ -193,7 +198,7 @@ class Menubar(tk.Menu):
     def open_file(self):
         file_path = filedialog.askopenfilename(
             title="Select an Excel file",
-            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*"))
+            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*")),
         )
         if file_path:
             self.parent_app.local_excel.load_file(Path(file_path))

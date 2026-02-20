@@ -5,7 +5,7 @@ from .components.frames import HomeView, RegisterView, Menubar, Sidebar
 from .components.widgets import ScanWindow
 from assets.img import WINDOW_ICON
 from devices.qr_scanner import cv2, USBQRScanner, WebcamScanner
-from db.database import get_registered_user_by_qr, log_attendance_db, get_logs
+from db.database import get_registered_user_by_qr, log_attendance_db
 
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -15,6 +15,7 @@ except Exception:
 SCALING_125 = ctk.set_widget_scaling(1)
 DEFAULT_THEME = ctk.set_appearance_mode("light")
 EXCEL_COLORS = ctk.set_default_color_theme("green")
+
 
 class AttendanceApp(ctk.CTk):
     def __init__(self, file):
@@ -29,9 +30,7 @@ class AttendanceApp(ctk.CTk):
         self.after(1, self.maximize_on_start)
 
         self.custom_font = ctk.CTkFont(
-            family="Segoe UI, Tahoma, sans",
-            size=16,
-            weight="normal"
+            family="Segoe UI, Tahoma, sans", size=16, weight="normal"
         )
 
         self.menubar = Menubar(self)
@@ -48,7 +47,7 @@ class AttendanceApp(ctk.CTk):
     def detect_devices(self):
         return {
             "USB QR Scanner": USBQRScanner.is_connected("COM3"),
-            "Webcam": self.check_webcam_available(0)
+            "Webcam": self.check_webcam_available(0),
         }
 
     def check_webcam_available(self, index=0):
@@ -81,7 +80,9 @@ class AttendanceApp(ctk.CTk):
         student_number = get_registered_user_by_qr(qr_hash)
         if student_number:
             if not self.excel or not self.excel.file_path:
-                messagebox.showerror("No File Loaded", "Please open an Excel file first.")
+                messagebox.showerror(
+                    "No File Loaded", "Please open an Excel file first."
+                )
                 return
             session_tag = "default_session"
             log_attendance_db(student_number, session_tag)
@@ -89,7 +90,7 @@ class AttendanceApp(ctk.CTk):
             file_name = self.excel.file_path.name
             messagebox.showinfo(
                 "Scan Successful",
-                f"Student Number: {student_number}\n\nSaved to: {file_name}"
+                f"Student Number: {student_number}\n\nSaved to: {file_name}",
             )
         else:
             messagebox.showerror("Scan Denied", "QR not registered.")
