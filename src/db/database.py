@@ -1,14 +1,10 @@
 import sqlite3 as sql
 from pathlib import Path
 
-# Define the database file path relative to the project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_DIR = BASE_DIR / "db"
 DB_PATH = DB_DIR / "attendance.db"
-
-# Ensure folder exists
 DB_DIR.mkdir(parents=True, exist_ok=True)
-
 
 def get_db_connection(db_path=DB_PATH):
     return sql.connect(db_path)
@@ -17,9 +13,11 @@ def init_db(db_path=DB_PATH):
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS registered_id (
-            student_number TEXT PRIMARY KEY UNIQUE NOT NULL,
-            qr_code TEXT UNIQUE NOT NULL
+        CREATE TABLE IF NOT EXISTS attendance_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_number TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            session_tag TEXT
         )
     """)
     conn.commit()
@@ -58,6 +56,57 @@ def remove_registered_user(student_number, db_path=DB_PATH):
     conn.commit()
     conn.close()
 
-if __name__ == "__main__":
-    get_db_connection()
-    init_db()
+def log_attendance_db(student_number: str, session_tag: str | None = None):
+    from datetime import datetime
+    conn = sql.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO attendance_logs (student_number, timestamp, session_tag)
+        VALUES (?, ?, ?)
+    """, (
+        student_number,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        session_tag
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def count_attendance(session_tag: str | None = None):
+    conn = sql.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    if session_tag:
+        cursor.execute("""
+            SELECT COUNT(*) FROM attendance_logs
+            WHERE session_tag = ?
+        """, (session_tag,))
+    else:
+        cursor.execute("SELECT COUNT(*) FROM attendance_logs")
+
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
+
+
+def get_logs(session_tag: str | None = None):
+    conn = sql.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    if session_tag:
+        cursor.execute("""
+            SELECT student_number, timestamp
+            FROM attendance_logs
+            WHERE session_tag = ?
+        """, (session_tag,))
+    else:
+        cursor.execute("""
+            SELECT student_number, timestamp
+            FROM attendance_logs
+        """)
+
+    rows = cursor.fetchall()
+    conn.close()
+    return rows

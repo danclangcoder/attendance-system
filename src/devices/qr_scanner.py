@@ -1,16 +1,22 @@
-import cv2
+import cv2, hashlib
 from serial import Serial
 from serial.tools import list_ports
 from pyzbar.pyzbar import decode
-from sha.sha_256 import create_key
 
+def create_key(qr: str) -> str | ValueError:
+    if qr == str(''):
+        return ValueError('Does not contain a valid string.')
+    else:
+        new_hash = hashlib.new('sha256')
+        new_hash.update(qr.encode())
+        new_key = new_hash.hexdigest()
+        return new_key
 
 class WebcamScanner:
     def __init__(self, cam_index=0):
         self.cam_index = cam_index
         self.cap = None
 
-    # 🔎 Check if webcam exists
     @staticmethod
     def is_available(cam_index=0):
         cap = cv2.VideoCapture(cam_index)
@@ -21,7 +27,6 @@ class WebcamScanner:
 
     def open(self):
         self.cap = cv2.VideoCapture(self.cam_index, cv2.CAP_DSHOW)
-
         if not self.cap.isOpened():
             raise Exception("Webcam not detected.")
 
@@ -36,7 +41,7 @@ class WebcamScanner:
         if not ret:
             return None
 
-        # Convert to grayscale (improves detection)
+        # Grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
         gray = cv2.adaptiveThreshold(
@@ -45,22 +50,17 @@ class WebcamScanner:
             cv2.THRESH_BINARY,
             11, 2
         )
-
-
         decoded_objects = decode(gray)
-
         for obj in decoded_objects:
             qr_data = obj.data.decode("utf-8").strip()
             if qr_data:
                 return frame, create_key(qr_data)
-
         return frame, None
 
     def close(self):
         if self.cap:
             self.cap.release()
             self.cap = None
-
 
 class USBQRScanner:
     def __init__(self, port="COM3", baudrate=9600):
