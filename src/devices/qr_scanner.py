@@ -1,4 +1,5 @@
-import cv2, hashlib
+import cv2 
+import hashlib
 from serial import Serial
 from serial.tools import list_ports
 from pyzbar.pyzbar import decode

@@ -1,11 +1,11 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import ctypes
-from .components.frames import HomeView, RegisterView, Menubar, Sidebar
+from .components.frames import Dashboard, RegisterView, Menubar, Sidebar
 from .components.widgets import ScanWindow
 from assets.img import WINDOW_ICON
 from devices.qr_scanner import cv2, USBQRScanner, WebcamScanner
-from db.database import get_registered_user_by_qr, log_attendance_db, get_logs
+from db.database import get_registered_user_by_qr, log_attendance_db
 
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -13,7 +13,7 @@ except Exception:
     pass
 
 SCALING_125 = ctk.set_widget_scaling(1)
-DEFAULT_THEME = ctk.set_appearance_mode("light")
+DEFAULT_THEME = ctk.set_appearance_mode("dark")
 EXCEL_COLORS = ctk.set_default_color_theme("green")
 
 class AttendanceApp(ctk.CTk):
@@ -38,7 +38,7 @@ class AttendanceApp(ctk.CTk):
         self.sidebar = Sidebar(self)
 
         self.init_device = self.detect_devices()
-        self.home = HomeView(self, self.init_device)
+        self.home = Dashboard(self, self.init_device)
         self.home.pack(expand=True, fill="both")
 
     def maximize_on_start(self):
@@ -46,8 +46,11 @@ class AttendanceApp(ctk.CTk):
         self.state("zoomed")
 
     def detect_devices(self):
+        usb_ports = [num for num in range(1, 20)]
+        usb_connected = any(USBQRScanner.is_connected(f"COM{port}") for port in usb_ports)
+        
         return {
-            "USB QR Scanner": USBQRScanner.is_connected("COM3"),
+            "USB QR Scanner": usb_connected,
             "Webcam": self.check_webcam_available(0)
         }
 
