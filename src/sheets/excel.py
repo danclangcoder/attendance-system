@@ -3,7 +3,6 @@ from pathlib import Path
 from openpyxl import Workbook as XLWorkbook, load_workbook
 from db.database import get_logs
 
-
 class Excel:
     def __init__(self, file_path: Path | None):
         self.file_path = file_path
@@ -23,7 +22,7 @@ class Excel:
         self.save()
 
     def _ensure_headers(self):
-        headers = ["Student Number", "Complete Name", "Timestamp"]
+        headers = ['Student Number', 'Complete Name', 'Timestamp']
         if self.sheet.max_row == 1 and all(
             cell.value is None for cell in self.sheet[1]
         ):
@@ -44,7 +43,7 @@ class Excel:
     def load_file(self, file_path: Path):
         self.file_path = file_path
         self._initialize_workbook(file_path)
-
+        
     def sync_db_to_excel(self, session_tag="default_session"):
         logs = get_logs(session_tag)
 
