@@ -164,3 +164,24 @@ def get_subjects():
     cursor.execute("SELECT subject_name FROM subjects")
     subjects = [row[0] for row in cursor.fetchall()]
     return subjects
+
+
+def get_monthly_attendance_counts(year):
+    # Added to fetch monthly attendance counts for the graph
+    cursor_temp = conn.cursor()
+
+    monthly_counts = []
+    for month in range(1, 13):
+        session_tag = f"{year}-{month:02}"  # Format session tag as YYYY-MM
+        cursor.execute(
+            """
+            SELECT COUNT(*) FROM attendance_logs
+            WHERE strftime('%Y-%m', timestamp) = ?
+            """,
+            (session_tag,)
+        )
+        count = cursor.fetchone()[0]  # Fetch the count for the month
+        monthly_counts.append(count)
+
+    conn.close()
+    return monthly_counts  # Return the list of counts for each month

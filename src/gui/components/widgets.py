@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox, ttk
-from devices.qr_scanner import WebcamScanner
+from src.devices.qr_scanner import WebcamScanner
 from PIL import Image, ImageTk
-from assets.img import STUDENT_ID
+from src.assets.img import STUDENT_ID
 import cv2
 
 class ScanWindow(ctk.CTkToplevel):

@@ -1,22 +1,30 @@
-import customtkinter as ctk
+import sys
+from pathlib import Path
+
+# Add the 'src' directory to the Python module search path
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+import customtkinter as CTk
 from tkinter import messagebox
 import ctypes
-from .components.frames import Dashboard, RegisterView, SubjectView, Menubar, Sidebar
-from .components.widgets import ScanWindow
-from assets.img import WINDOW_ICON
-from devices.qr_scanner import cv2, USBQRScanner, WebcamScanner
-from db.database import get_registered_user_by_qr, log_attendance_db
+from src.gui.components.frames import Dashboard, RegisterView, SubjectView, Menubar, Sidebar
+from src.gui.components.widgets import ScanWindow
+from src.assets.img import WINDOW_ICON
+from src.devices.qr_scanner import cv2, USBQRScanner, WebcamScanner
+from src.db.database import get_registered_user_by_qr, log_attendance_db
 
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
     pass
 
-SCALING_125 = ctk.set_widget_scaling(1)
-DEFAULT_THEME = ctk.set_appearance_mode("dark")
-EXCEL_COLORS = ctk.set_default_color_theme("green")
+SCALING_125 = CTk.set_widget_scaling(1)
+DEFAULT_THEME = CTk.set_appearance_mode("dark")
+EXCEL_COLORS = CTk.set_default_color_theme("green")
 
-class AttendanceApp(ctk.CTk):
+class AttendanceApp(CTk.CTk):
     def __init__(self, file):
         super().__init__()
 
@@ -29,14 +37,14 @@ class AttendanceApp(ctk.CTk):
         self.minsize(640, 480)
         self.after(1, self.maximize_on_start)
 
-        self.custom_font = ctk.CTkFont(
+        self.custom_font = CTk.CTkFont(
             family="Segoe UI, Tahoma, sans",
             size=16,
             weight="normal"
         )
 
         self.menubar = Menubar(self)
-        self.sidebar = Sidebar(self)
+        self.sidebar = Sidebar(self, self.custom_font)
 
         self.init_device = self.detect_devices()
         self.home = Dashboard(self, self.init_device)
@@ -45,6 +53,7 @@ class AttendanceApp(ctk.CTk):
     def maximize_on_start(self):
         self.update_idletasks()
         self.state("zoomed")
+        self.after_cancel("all")  # Ensure no lingering callbacks
 
     def detect_devices(self):
         usb_ports = [num for num in range(1, 20)]
@@ -125,8 +134,13 @@ class AttendanceApp(ctk.CTk):
                 f"Student Number: {student_number}\n\n{scanned}\n\nSaved to: {file_name}"
             )
 
+            self.home.refresh_analytics()
+
         else:
             messagebox.showerror("Scan Denied", "QR not registered.")
+        
+        # Refresh the analytics graph (Added to dynamically update the graph after registration)
+        self.home.refresh_analytics()
 
     def show_home_view(self):
         if hasattr(self, "register_view"):
@@ -152,3 +166,12 @@ class AttendanceApp(ctk.CTk):
         if not hasattr(self, "subject_view"):
             self.subject_view = SubjectView(self)
         self.subject_view.pack(expand=True, fill="both")
+
+    def on_close(self):
+        # Cancel any pending callbacks to avoid invalid command errors
+        self.after_cancel("all")
+        self.destroy()
+
+if __name__ == "__main__":
+    app = AttendanceApp(file=None)
+    app.mainloop()

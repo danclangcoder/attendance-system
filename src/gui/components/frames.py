@@ -1,11 +1,22 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from .widgets import TreeView
+from src.gui.components.widgets import TreeView
 from pathlib import Path
 from PIL import Image
-from assets.img import QR_LOGO
-from db.database import register_user, add_subject, get_subjects
+from src.assets.img import QR_LOGO
+from src.db.database import register_user, add_subject, get_subjects
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+# Add the 'src' directory to the Python module search path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 class Dashboard(ctk.CTkFrame):
     def __init__(self, parent, devices):
@@ -131,6 +142,100 @@ class Dashboard(ctk.CTkFrame):
                 break
         else:
             self.device_options.set(self.display_devices[0])
+
+
+        # Analytics Board Label
+        ctk.CTkLabel(
+            self.scrollable_frame,
+            text="Analytics Board",
+            font=("Segoe UI Semibold", 16),
+        ).pack(anchor="w", padx=20, pady=(20, 10))
+
+        # Frame for Graph
+        self.analytics_frame = ctk.CTkFrame(
+            self.scrollable_frame,
+            corner_radius=15,
+            fg_color="#1E1E1E"
+        )
+
+        self.analytics_frame.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=(0, 20)
+        )
+
+        # Initialize graph (Added for Analytics Board graph functionality)
+        self.init_graph()
+
+    def open_excel_file(self):
+        file_path = filedialog.askopenfilename(
+            title="Select an Excel file",
+            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*")),
+        )
+        if file_path:
+            self.parent.excel.load_file(Path(file_path))
+            messagebox.showinfo("File Loaded", f"Excel file loaded:\n{file_path}")
+
+    def refresh_table(self, session_tag="default_session"):
+        from db.database import get_logs
+
+        # Clear existing rows
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+
+        logs = get_logs(session_tag)
+
+        for log in logs:
+            student_number = log[0]
+            timestamp = log[1]
+            self.tree.insert("", "end", values=(student_number, timestamp))
+
+    
+    def start_scan(self):
+        selected = self.device_options.get()
+        actual_device = self.device_map.get(selected)
+        if not actual_device:
+            messagebox.showerror("Device Error", "Selected device is not connected.")
+            return
+        self.parent.open_scanner(
+            actual_device, callback=self.parent.verify_registered_qr
+        )
+
+    def init_graph(self):
+        # Create a matplotlib figure (Added to initialize the graph)
+        self.figure, self.ax = plt.subplots()
+        self.ax.set_title("Monthly Registered Users")
+        self.ax.set_xlabel("Month")
+        self.ax.set_ylabel("Number of Users")
+        self.ax.plot([], [], label="Registered Users", color="blue")
+        self.ax.legend()
+
+        # Embed the figure in the analytics_frame (Added to display the graph in the UI)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.analytics_frame)
+        self.canvas.get_tk_widget().pack(expand=True, fill="both")
+        self.canvas.draw()
+
+    def update_graph(self, data):
+        # Clear the previous graph (Added to refresh the graph with new data)
+        self.ax.clear()
+        self.ax.set_title("Monthly Registered Users")
+        self.ax.set_xlabel("Month")
+        self.ax.set_ylabel("Number of Users")
+
+        # Plot the new data (Added to dynamically update the graph)
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        self.ax.plot(months, data, label="Registered Users", color="blue")
+        self.ax.legend()
+
+        # Redraw the canvas (Added to reflect changes in the graph)
+        self.canvas.draw()
+
+    def refresh_analytics(self):
+        # Example data for now (replace with actual database query results) (Added to fetch and update graph data)
+        monthly_data = [0] * 12  # Placeholder data until count_attendance function is implemented
+        self.update_graph(monthly_data)
+
 
     def open_excel_file(self):
         file_path = filedialog.askopenfilename(
@@ -320,59 +425,107 @@ class SubjectView(ctk.CTkFrame):
                 self.parent.home.subjects_table.display_subjects(subjects)
         else:
             messagebox.showerror("Error", "Please enter a subject name.")
+                 
+
 
 class Sidebar(ctk.CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, custom_font):
         super().__init__(
             parent,
-            width=220,
+            width=60,  # collapsed initially
             corner_radius=0,
             border_width=1,
             border_color="#A9A9A9",
             fg_color="#3a3a3a",
         )
-        self.pack(side="left", fill="y", ipady=10)
+
+        self.parent = parent
+        self.custom_font = custom_font
+        self.expanded = False
+        self.min_width = 60
+        self.max_width = 220
+
+        self.pack(side="left", fill="y")
         self.pack_propagate(False)
 
-        ctk.CTkButton(
+        # --- 1. Toggle button (always visible) ---
+        self.toggle_btn = ctk.CTkButton(
             self,
-            text="x",
+            text="☰",
             fg_color="transparent",
             width=30,
             height=30,
-            font=ctk.CTkFont(size=20, weight="bold")
-        ).pack(padx=10, pady=20, anchor="ne")
+            font=self.custom_font,
+            command=self.toggle_sidebar
+        )
+        # Always at top-left
+        self.toggle_btn.place(x=10, y=10)
 
-
-        qr_logo = ctk.CTkImage(Image.open(QR_LOGO), size=(100, 100))
-        ctk.CTkLabel(self, text="", image=qr_logo).pack(pady=(50, 10))
-
-        ctk.CTkButton(
+        # --- 2. Menu frame (hidden initially) ---
+        self.menu_frame = ctk.CTkFrame(
             self,
+            fg_color="#3a3a3a",
+            corner_radius=0,
+            width=self.max_width - self.min_width
+        )
+        # Hidden initially
+        self.menu_frame.place(x=self.min_width, y=0, relheight=1)
+        self.menu_frame.lower()  # hide menu behind toggle button
+
+        # --- 3. QR logo ---
+        try:
+            qr_logo = ctk.CTkImage(Image.open(QR_LOGO), size=(100, 100))
+            self.logo_label = ctk.CTkLabel(self.menu_frame, text="", image=qr_logo)
+            self.logo_label.pack(pady=(20, 10))
+        except Exception as e:
+            print(f"Error loading QR logo: {e}")
+
+        # --- 4. Navigation buttons ---
+        self.home_btn = ctk.CTkButton(
+            self.menu_frame,
             text="Home",
             anchor="w",
-            font=parent.custom_font,
+            font=self.custom_font,
             fg_color="transparent",
-            command=parent.show_home_view,
-        ).pack(padx=10, pady=(20, 5), fill="x")
+            command=self.parent.show_home_view
+        )
+        self.home_btn.pack(padx=10, pady=5, fill="x")
 
-        ctk.CTkButton(
-            self,
+        self.register_btn = ctk.CTkButton(
+            self.menu_frame,
             text="Register ID",
             anchor="w",
-            font=parent.custom_font,
+            font=self.custom_font,
             fg_color="transparent",
-            command=parent.show_register_view,
-        ).pack(padx=10, pady=(5, 5), fill="x")
+            command=self.parent.show_register_view
+        )
+        self.register_btn.pack(padx=10, pady=5, fill="x")
 
-        ctk.CTkButton(
-            self,
+        self.subject_btn = ctk.CTkButton(
+            self.menu_frame,
             text="Add Subject",
             anchor="w",
-            font=parent.custom_font,
+            font=self.custom_font,
             fg_color="transparent",
-            command=parent.show_subject_view,
-        ).pack(padx=10, pady=(5, 5), fill="x")
+            command=self.parent.show_subject_view
+        )
+        self.subject_btn.pack(padx=10, pady=5, fill="x")
+
+    # --- 5. Toggle function (no animation, instant pop-out) ---
+    def toggle_sidebar(self):
+        if self.expanded:
+            # Collapse instantly
+            self.menu_frame.lower()  # hide menu behind toggle
+            self.configure(width=self.min_width)  # sidebar minimum width
+            self.expanded = False
+        else:
+            # Expand instantly
+            self.configure(width=self.max_width)  # sidebar max width
+            self.menu_frame.lift()  # bring menu on top
+            self.expanded = True
+
+        # Keep toggle button always visible at top-left
+        self.toggle_btn.place(x=10, y=10)
 
 
 class Menubar(tk.Menu):
