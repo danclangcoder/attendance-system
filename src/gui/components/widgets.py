@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from devices.qr_scanner import WebcamScanner
 from PIL import Image, ImageTk
 from assets.img import STUDENT_ID
@@ -113,3 +113,29 @@ class ScanWindow(ctk.CTkToplevel):
         x = (sw // 2) - (w // 2)
         y = (sh // 2) - (h // 2)
         self.geometry(f"{w}x{h}+{x-100}+{y-100}")
+
+class TreeView(ctk.CTkFrame):
+    def __init__(self, parent, height, width):
+        super().__init__(parent, height=height, width=width)
+        ctk.CTkLabel(
+            self,
+            text="Subjects", 
+            font=("Segoe UI", 24, "bold")
+        ).pack(pady=(0, 10))
+
+        # Subjects table
+        self.subjects_tree = ttk.Treeview(
+            self,
+            columns=("Subject"),
+            show="headings"
+        )
+        self.subjects_tree.heading("Subject", anchor="w")
+        self.subjects_tree.column("Subject", anchor="w", width=200)
+        self.subjects_tree.insert("", "end", values=("INPROT1",))
+        self.subjects_tree.pack(expand=True, fill="both")
+
+    def display_subjects(self, subjects):
+        for item in self.subjects_tree.get_children():
+            self.subjects_tree.delete(item)
+        for subject in subjects:
+            self.subjects_tree.insert("", "end", values=(subject,))

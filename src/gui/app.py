@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import ctypes
-from .components.frames import Dashboard, RegisterView, Menubar, Sidebar
+from .components.frames import Dashboard, RegisterView, SubjectView, Menubar, Sidebar
 from .components.widgets import ScanWindow
 from assets.img import WINDOW_ICON
 from devices.qr_scanner import cv2, USBQRScanner, WebcamScanner
@@ -24,6 +24,7 @@ class AttendanceApp(ctk.CTk):
 
         self.title("Attendance System")
         self.iconbitmap(WINDOW_ICON)
+        self.wm_iconbitmap
         self.geometry("1920x1080")
         self.minsize(640, 480)
         self.after(1, self.maximize_on_start)
@@ -81,30 +82,73 @@ class AttendanceApp(ctk.CTk):
         messagebox.showinfo("Scan Successful", f"QR Hash scanned: {qr_hash}")
 
     def verify_registered_qr(self, qr_hash):
-        student_number = get_registered_user_by_qr(qr_hash)
-        if student_number:
+        student = get_registered_user_by_qr(qr_hash)
+
+        if student:
+            # Unpack returned student data
+            student_number, last_name, first_name, section, subject = student
+
             if not self.excel or not self.excel.file_path:
-                messagebox.showerror("No File Loaded", "Please open an Excel file first.")
+                proceed = messagebox.askyesno(
+                    "No File Loaded",
+                    "No Excel file is loaded.\n\nDo you want to continue and log attendance to the database only?"
+                )
+                if not proceed:
+                    return
+
+                scanned = log_attendance_db(
+                    student_number,
+                    last_name,
+                    first_name,
+                    section,
+                    subject
+                )
+
+                messagebox.showinfo(
+                    "Scan Successful",
+                    f"Student Number: {first_name} {last_name}\n\n{scanned}\n\nSaved to database only."
+                )
                 return
-            session_tag = "default_session"
-            log_attendance_db(student_number, session_tag)
-            self.excel.sync_db_to_excel(session_tag)
+
+            # Log to database
+            scanned = log_attendance_db(
+                student_number,
+                last_name,
+                first_name,
+                section,
+                subject
+            )
+
             file_name = self.excel.file_path.name
             messagebox.showinfo(
                 "Scan Successful",
-                f"Student Number: {student_number}\n\nSaved to: {file_name}"
+                f"Student Number: {student_number}\n\n{scanned}\n\nSaved to: {file_name}"
             )
+
         else:
             messagebox.showerror("Scan Denied", "QR not registered.")
 
     def show_home_view(self):
         if hasattr(self, "register_view"):
             self.register_view.pack_forget()
+        if hasattr(self, "subject_view"):
+            self.subject_view.pack_forget()
         self.home.pack(expand=True, fill="both")
 
     def show_register_view(self):
         if hasattr(self, "home"):
             self.home.pack_forget()
+        if hasattr(self, "subject_view"):
+            self.subject_view.pack_forget()
         if not hasattr(self, "register_view"):
             self.register_view = RegisterView(self)
         self.register_view.pack(expand=True, fill="both")
+
+    def show_subject_view(self):
+        if hasattr(self, "home"):
+            self.home.pack_forget()
+        if hasattr(self, "register_view"):
+            self.register_view.pack_forget()
+        if not hasattr(self, "subject_view"):
+            self.subject_view = SubjectView(self)
+        self.subject_view.pack(expand=True, fill="both")

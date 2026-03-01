@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(__file__))
+
 from gui.app import AttendanceApp
 from db.database import init_db
 from sheets.excel import Excel

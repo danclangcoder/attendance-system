@@ -1,11 +1,11 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from .widgets import TreeView
 from pathlib import Path
 from PIL import Image
 from assets.img import QR_LOGO
-from db.database import register_user
-
+from db.database import register_user, add_subject, get_subjects
 
 class Dashboard(ctk.CTkFrame):
     def __init__(self, parent, devices):
@@ -55,17 +55,6 @@ class Dashboard(ctk.CTkFrame):
             text_color="#6cffa9",
         ).pack(pady=(35, 0))
 
-        subjects = ["ITELEC1", "ITELEC2", "INPROT1"]
-        # View Subjects
-        ctk.CTkLabel(
-            self.scrollable_frame, 
-            text="Subjects", 
-            font=("Segoe UI", 24, "bold")
-        ).pack(padx=20, pady=(20, 10), anchor="w")
-
-        self.table_frame_1 = ctk.CTkFrame(self.scrollable_frame, height=300, width=300)
-        self.table_frame_1.pack(padx=20, pady=(0, 20), expand=True, anchor="w")
-
         style = ttk.Style()
         style.theme_use("default")
         style.configure(
@@ -75,69 +64,67 @@ class Dashboard(ctk.CTkFrame):
             fieldbackground="#2d2d2d",
             rowheight=30,
         )
-
-        # --- Treeview creation ---
-        self.subjects_tree = ttk.Treeview(
-            self.table_frame_1,
-            columns=("Subject",),
-            show="headings"
-        )
-        self.subjects_tree.heading("Subject", text="", anchor="w")
-        self.subjects_tree.column("Subject", anchor="w", width=300)
-
-        # Insert rows...
-        subjects = ["ITELEC1", "ITELEC2", "INPROT1"]
-        for i, subject in enumerate(subjects):
-            self.subjects_tree.insert("", "end", values=(subject))
-        self.subjects_tree.pack(expand=True, fill="both")
         
-        # Recently registered label
-        ctk.CTkLabel(
-            self.scrollable_frame,
-            text="Recently Registered Students",
-            font=("Segoe UI Semibold", 16),
-        ).pack(anchor="w", padx=20, pady=(20, 10))
+        # Tables container
+        self.tables_container = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
+        self.tables_container.pack(fill="x", padx=20, pady=10)
 
-        # Treeview for recently registered students
-        self.table_frame_2 = ctk.CTkFrame(self.scrollable_frame, height=300, width=400)
-        self.table_frame_2.pack(padx=20, pady=(0, 20), fill="x")
+        # Subjects table
+        subjects = get_subjects()
+        self.subjects_table = TreeView(self.tables_container, height=300, width=400)
+        self.subjects_table.pack(side="left", expand=True, fill="both", padx=(0, 10))
+        self.subjects_table.display_subjects(subjects)
+
+        # Students table
+        self.table_frame_2 = ctk.CTkFrame(self.tables_container, height=300, width=600)
+        self.table_frame_2.pack(side="left", expand=True, fill="both", padx=(10, 0))
+        ctk.CTkLabel(
+            self.table_frame_2,
+            text="Recently Scanned Students",
+            font=("Segoe UI", 24, "bold"),
+        ).pack(pady=(0, 10))
 
         columns = ("Student No.", "Last Name", "First Name", "Section", "Timestamp")
         self.recents = ttk.Treeview(
             self.table_frame_2, 
             columns=columns, 
-            show="headings", 
-            height=20
+            show="headings"
         )
         for col in columns:
             self.recents.heading(col, text=col)
-            self.recents.column(col, anchor="center", width=400)
+            self.recents.column(col, anchor="w", width=150)
         self.recents.pack(expand=True, fill="both")
 
         # Button frame inside scrollable_frame
         self.button_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
-        self.button_frame.pack(fill="x", padx=20, pady=20, side="bottom")
+        self.button_frame.pack(fill="x", padx=20, pady=20)
 
+        # Inner frame to center buttons
+        self.inner_btn_frame = ctk.CTkFrame(self.button_frame, fg_color="transparent")
+        self.inner_btn_frame.pack()  # centers inner frame inside button_frame
+
+        # Buttons inside inner frame, packed horizontally
         self.open_btn = ctk.CTkButton(
-            self.button_frame,
+            self.inner_btn_frame,
             text="Open Excel",
-            font=self.parent.custom_font,
-            command=self.open_excel_file,
+            font=parent.custom_font,
+            command=self.open_excel_file
         )
-        self.open_btn.grid(row=0, column=0, padx=10)
+        self.open_btn.pack(side="left", padx=10)
 
         self.scan_btn = ctk.CTkButton(
-            self.button_frame,
+            self.inner_btn_frame,
             text="Scan ID",
-            font=self.parent.custom_font,
-            command=self.start_scan,
+            font=parent.custom_font,
+            command=self.start_scan
         )
-        self.scan_btn.grid(row=0, column=1, padx=10)
+        self.scan_btn.pack(side="left", padx=10)
 
         self.device_options = ctk.CTkOptionMenu(
-            self.button_frame, values=self.display_devices
+            self.inner_btn_frame,
+            values=self.display_devices
         )
-        self.device_options.grid(row=0, column=2, padx=10)
+        self.device_options.pack(side="left", padx=10)
         for name, available in devices.items():
             if available:
                 self.device_options.set(name)
@@ -279,45 +266,113 @@ class RegisterView(ctk.CTkFrame):
 
     def register_qr(self, qr_hash):
         student_number = self.student_num.get()
-        success = register_user(student_number, qr_hash)
+        last_name = self.last_name.get()
+        first_name = self.first_name.get()
+        section = self.section.get()
+        subject = self.subject.get()
+
+        success = register_user(student_number, qr_hash, last_name, first_name, section, subject)
 
         if success:
-            messagebox.showinfo("Success", f"Student registered: {student_number}")
+            messagebox.showinfo("Success", f"Student registered: {student_number} - {first_name} {last_name}")
         else:
-            messagebox.showerror("Error", f"Student already exists: {student_number}")
+            messagebox.showerror("Error", f"Student already exists: {student_number} - {first_name} {last_name}")
 
         self.student_num.delete(0, "end")
         self.submit_btn.configure(state="disabled")
 
 
+class SubjectView(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, corner_radius=0)
+        self.parent = parent
+        self.pack(expand=True, fill="both")
+
+        ctk.CTkLabel(
+            self,
+            text="Subjects",
+            font=parent.custom_font,
+        ).pack(pady=20)
+        self.subject_entry = ctk.CTkEntry(
+            self,
+            font=parent.custom_font,
+            placeholder_text="Enter subject name or code...",
+            width=400,
+        )
+        self.subject_entry.pack(pady=10)
+        ctk.CTkButton(
+            self,
+            text="Add",
+            font=parent.custom_font,
+            command=self.add_subject,
+        ).pack(pady=10)
+
+    def add_subject(self):
+        subject_name = self.subject_entry.get()
+        if subject_name:
+            add_subject(subject_name)
+            self.subject_entry.delete(0, "end")
+            messagebox.showinfo("Success", f"Subject added: {subject_name}")
+
+            # Refresh tree view in Dashboard
+            subjects = get_subjects()
+            if hasattr(self.parent, "home") and hasattr(self.parent.home, "subjects_table"):
+                self.parent.home.subjects_table.display_subjects(subjects)
+        else:
+            messagebox.showerror("Error", "Please enter a subject name.")
+
 class Sidebar(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(
             parent,
-            width=300,
+            width=220,
             corner_radius=0,
             border_width=1,
             border_color="#A9A9A9",
             fg_color="#3a3a3a",
         )
         self.pack(side="left", fill="y", ipady=10)
+        self.pack_propagate(False)
+
+        ctk.CTkButton(
+            self,
+            text="x",
+            fg_color="transparent",
+            width=30,
+            height=30,
+            font=ctk.CTkFont(size=20, weight="bold")
+        ).pack(padx=10, pady=20, anchor="ne")
+
 
         qr_logo = ctk.CTkImage(Image.open(QR_LOGO), size=(100, 100))
         ctk.CTkLabel(self, text="", image=qr_logo).pack(pady=(50, 10))
 
         ctk.CTkButton(
             self,
-            text="Dashboard",
+            text="Home",
+            anchor="w",
             font=parent.custom_font,
+            fg_color="transparent",
             command=parent.show_home_view,
-        ).pack(padx=10, pady=(20, 5))
+        ).pack(padx=10, pady=(20, 5), fill="x")
 
         ctk.CTkButton(
             self,
             text="Register ID",
+            anchor="w",
             font=parent.custom_font,
+            fg_color="transparent",
             command=parent.show_register_view,
-        ).pack(padx=10, pady=(5, 5))
+        ).pack(padx=10, pady=(5, 5), fill="x")
+
+        ctk.CTkButton(
+            self,
+            text="Add Subject",
+            anchor="w",
+            font=parent.custom_font,
+            fg_color="transparent",
+            command=parent.show_subject_view,
+        ).pack(padx=10, pady=(5, 5), fill="x")
 
 
 class Menubar(tk.Menu):
