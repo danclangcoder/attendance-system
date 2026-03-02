@@ -2,6 +2,7 @@ import os
 import sys
 import sqlite3 as sql
 from pathlib import Path
+from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_DIR = BASE_DIR / "db"
@@ -32,7 +33,8 @@ def init_db(db_path=DB_PATH):
             first_name TEXT NOT NULL,
             section TEXT NOT NULL,
             subject TEXT NOT NULL,
-            qr_code TEXT UNIQUE NOT NULL
+            qr_code TEXT UNIQUE NOT NULL,
+            date_registered TEXT NOT NULL
         )
         """)
     cursor.execute("""
@@ -52,16 +54,27 @@ def init_db(db_path=DB_PATH):
             subject_name TEXT UNIQUE NOT NULL
         )
         """)
+    # Ensure the `date_registered` column exists in the `registered_id` table
+    cursor.execute("""
+        PRAGMA table_info(registered_id)
+    """)
+    columns = [col[1] for col in cursor.fetchall()]
+
+    if "date_registered" not in columns:
+        cursor.execute("ALTER TABLE registered_id ADD COLUMN date_registered TEXT")
+        cursor.execute("UPDATE registered_id SET date_registered = datetime('now')")
     conn.commit()
 
 def register_user(
     student_number, qr_hash, last_name, first_name, section, subject, db_path=DB_PATH
 ):
+
     cursor = conn.cursor()
     try:
+        date_registered = datetime.now().strftime("%Y-%m-%d")
         cursor.execute(
-            "INSERT INTO registered_id (student_number, qr_code, last_name, first_name, section, subject) VALUES (?, ?, ?, ?, ?, ?)",
-            (student_number, qr_hash, last_name, first_name, section, subject),
+            "INSERT INTO registered_id (student_number, qr_code, last_name, first_name, section, subject, date_registered) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (student_number, qr_hash, last_name, first_name, section, subject, date_registered),
         )
         conn.commit()
     except Exception as e:
@@ -167,21 +180,46 @@ def get_subjects():
 
 
 def get_monthly_attendance_counts(year):
-    # Added to fetch monthly attendance counts for the graph
-    cursor_temp = conn.cursor()
-
+    cursor_local = conn.cursor()
     monthly_counts = []
+
     for month in range(1, 13):
-        session_tag = f"{year}-{month:02}"  # Format session tag as YYYY-MM
-        cursor.execute(
+        session_tag = f"{year}-{month:02}"
+
+        cursor_local.execute(
             """
             SELECT COUNT(*) FROM attendance_logs
             WHERE strftime('%Y-%m', timestamp) = ?
             """,
             (session_tag,)
         )
-        count = cursor.fetchone()[0]  # Fetch the count for the month
+
+        count = cursor_local.fetchone()[0]
         monthly_counts.append(count)
 
-    conn.close()
-    return monthly_counts  # Return the list of counts for each month
+    return monthly_counts
+
+def get_monthly_registered_counts(year):
+    cursor_local = conn.cursor()
+    monthly_counts = []
+
+    for month in range(1, 13):
+        month_tag = f"{year}-{month:02}"
+
+        cursor_local.execute(
+            """
+            SELECT COUNT(*) FROM registered_id
+            WHERE strftime('%Y-%m', date_registered) = ?
+            """,
+            (month_tag,)
+        )
+ 
+        count = cursor_local.fetchone()[0]
+        monthly_counts.append(count)
+
+    return monthly_counts
+
+def get_total_registered_users():
+    cursor_local = conn.cursor()
+    cursor_local.execute("SELECT COUNT(*) FROM registered_id")
+    return cursor_local.fetchone()[0]

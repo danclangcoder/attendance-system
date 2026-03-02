@@ -18,6 +18,7 @@ from src.db.database import get_registered_user_by_qr, log_attendance_db
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
+    
     pass
 
 SCALING_125 = CTk.set_widget_scaling(1)

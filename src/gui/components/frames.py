@@ -8,6 +8,8 @@ from src.assets.img import QR_LOGO
 from src.db.database import register_user, add_subject, get_subjects
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from src.db.database import get_monthly_registered_counts
+from datetime import datetime
 
 import sys
 import os
@@ -58,10 +60,12 @@ class Dashboard(ctk.CTkFrame):
         stat_frame.pack(fill="x", padx=20, pady=10)
         stat_frame.pack_propagate(False)
 
-        total_students = ctk.StringVar(value=f"{0}")
+        
+        self.total_students = ctk.StringVar()
+        self.refresh_total_registered()
         ctk.CTkLabel(
             stat_frame,
-            text=f"TOTAL REGISTERED STUDENTS \n{total_students.get()}",
+            textvariable=self.total_students,
             font=("Segoe UI Bold", 16),
             text_color="#6cffa9",
         ).pack(pady=(35, 0))
@@ -167,40 +171,7 @@ class Dashboard(ctk.CTkFrame):
 
         # Initialize graph (Added for Analytics Board graph functionality)
         self.init_graph()
-
-    def open_excel_file(self):
-        file_path = filedialog.askopenfilename(
-            title="Select an Excel file",
-            filetypes=(("Excel Files", "*.xlsx"), ("All Files", "*.*")),
-        )
-        if file_path:
-            self.parent.excel.load_file(Path(file_path))
-            messagebox.showinfo("File Loaded", f"Excel file loaded:\n{file_path}")
-
-    def refresh_table(self, session_tag="default_session"):
-        from db.database import get_logs
-
-        # Clear existing rows
-        for row in self.tree.get_children():
-            self.tree.delete(row)
-
-        logs = get_logs(session_tag)
-
-        for log in logs:
-            student_number = log[0]
-            timestamp = log[1]
-            self.tree.insert("", "end", values=(student_number, timestamp))
-
-    
-    def start_scan(self):
-        selected = self.device_options.get()
-        actual_device = self.device_map.get(selected)
-        if not actual_device:
-            messagebox.showerror("Device Error", "Selected device is not connected.")
-            return
-        self.parent.open_scanner(
-            actual_device, callback=self.parent.verify_registered_qr
-        )
+        self.refresh_analytics()
 
     def init_graph(self):
         # Create a matplotlib figure (Added to initialize the graph)
@@ -232,8 +203,12 @@ class Dashboard(ctk.CTkFrame):
         self.canvas.draw()
 
     def refresh_analytics(self):
-        # Example data for now (replace with actual database query results) (Added to fetch and update graph data)
-        monthly_data = [0] * 12  # Placeholder data until count_attendance function is implemented
+        from src.db.database import get_monthly_registered_counts
+        current_year = datetime.now().year
+
+        # ✅ Ito na ang tama
+        monthly_data = get_monthly_registered_counts(current_year)
+
         self.update_graph(monthly_data)
 
 
@@ -270,6 +245,11 @@ class Dashboard(ctk.CTkFrame):
         self.parent.open_scanner(
             actual_device, callback=self.parent.verify_registered_qr
         )
+
+    def refresh_total_registered(self):
+        from src.db.database import get_total_registered_users
+        total_count = get_total_registered_users()
+        self.total_students.set(f"TOTAL REGISTERED STUDENTS\n{total_count}")
 
 
 class RegisterView(ctk.CTkFrame):
@@ -356,18 +336,16 @@ class RegisterView(ctk.CTkFrame):
             self.submit_btn.configure(state="disabled")
 
     def start_qr_scan(self):
-        selected_device = None
-        devices = self.parent.init_device
-        for name, available in devices.items():
-            if available:
-                selected_device = name
-                break
 
-        if not selected_device:
-            messagebox.showerror("Device Error", "No scanning device is connected.")
+        # Get selected device from Dashboard
+        selected_device = self.parent.home.device_options.get()
+        actual_device = self.parent.home.device_map.get(selected_device)
+
+        if not actual_device:
+            messagebox.showerror("Device Error", "Selected device is not connected.")
             return
 
-        self.parent.open_scanner(selected_device, callback=self.register_qr)
+        self.parent.open_scanner(actual_device, callback=self.register_qr)
 
     def register_qr(self, qr_hash):
         student_number = self.student_num.get()
@@ -380,6 +358,10 @@ class RegisterView(ctk.CTkFrame):
 
         if success:
             messagebox.showinfo("Success", f"Student registered: {student_number} - {first_name} {last_name}")
+            
+            # Refresh analytics to update the graph
+            self.parent.home.refresh_total_registered()
+            self.parent.home.refresh_analytics()
         else:
             messagebox.showerror("Error", f"Student already exists: {student_number} - {first_name} {last_name}")
 
